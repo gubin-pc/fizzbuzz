@@ -209,7 +209,7 @@
             <plugin>
                 <groupId>io.fabric8</groupId>
                 <artifactId>docker-maven-plugin</artifactId>
-                <version>0.31.0</version>
+                <version>0.42.0</version>
                 <configuration>
                     <verbose>true</verbose>
                     <images>
@@ -221,12 +221,18 @@
                                 <assembly>
                                     <descriptorRef>artifact</descriptorRef>
                                 </assembly>
+                                <createImageOptions>
+                                    <platform>linux/x86_64</platform>
+                                </createImageOptions>
                                 <cmd>java -jar maven/${project.artifactId}-${project.version}.jar</cmd>
                                 <ports>
                                     <port>${service.port}/tcp</port>
                                 </ports>
                             </build>
                             <run>
+                                <platform>
+                                    linux/x86_64
+                                </platform>
                                 <env>
                                     <SERVICE_PORT>${service.port}</SERVICE_PORT>
                                 </env>
