@@ -8,6 +8,7 @@
     <name>fizzbuzz-app</name>
 
     <properties>
+        <service.port>8081</service.port>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <java.version>17</java.version>
@@ -94,7 +95,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>3.0.4</version>
                 <configuration>
-                    <mainClass>me.fizzbuzz.app.FizzbuzzApplication</mainClass>
+                    <mainClass>me.fizzbuzz.app.FizzbuzzApplicationKt</mainClass>
                 </configuration>
                 <executions>
                     <execution>
@@ -204,6 +205,38 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>0.31.0</version>
+                <configuration>
+                    <verbose>true</verbose>
+                    <images>
+                        <image>
+                            <alias>${project.artifactId}</alias>
+                            <name>${project.artifactId}:${project.version}</name>
+                            <build>
+                                <from>openjdk:17-alpine</from>
+                                <assembly>
+                                    <descriptorRef>artifact</descriptorRef>
+                                </assembly>
+                                <cmd>java -jar maven/${project.artifactId}-${project.version}.jar</cmd>
+                                <ports>
+                                    <port>${service.port}/tcp</port>
+                                </ports>
+                            </build>
+                            <run>
+                                <env>
+                                    <SERVICE_PORT>${service.port}</SERVICE_PORT>
+                                </env>
+                                <ports>
+                                    <port>${service.port}:${service.port}</port>
+                                </ports>
+                            </run>
+                        </image>
+                    </images>
+                </configuration>
             </plugin>
         </plugins>
     </build>
