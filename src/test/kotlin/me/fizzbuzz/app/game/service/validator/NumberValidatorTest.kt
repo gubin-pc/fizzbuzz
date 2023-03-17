@@ -1,7 +1,7 @@
 package me.fizzbuzz.app.game.service.validator
 
-import me.fizzbuzz.app.game.service.validator.NumberValidator.requireNotLongerThan
-import me.fizzbuzz.app.game.service.validator.NumberValidator.requireNotNegative
+import me.fizzbuzz.app.game.service.validator.NumberValidator.requireNoMoreThan
+import me.fizzbuzz.app.game.service.validator.NumberValidator.requireNonNegative
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -24,7 +24,7 @@ internal class NumberValidatorTest {
         val numbers = input.split(',').map { it.toBigInteger() }.toTypedArray()
 
         //then
-        val error = assertThrows<IllegalArgumentException> { requireNotNegative(numbers) }
+        val error = assertThrows<IllegalArgumentException> { requireNonNegative(numbers) }
         assertEquals("Numbers should not contains negative", error.message)
     }
 
@@ -33,24 +33,24 @@ internal class NumberValidatorTest {
         "1,2,3,5",
         "1,0,-0",
     ])
-    fun `should not throw if numbers are not negative`(
+    fun `should not throw if numbers positive or zero`(
         input: String
     ) {
         //given
         val numbers = input.split(',').map { it.toBigInteger() }.toTypedArray()
 
         //then
-        assertDoesNotThrow { requireNotNegative(numbers) }
+        assertDoesNotThrow { requireNonNegative(numbers) }
     }
 
     @Test
-    fun `should throw if numbers size not longer then expected`() {
+    fun `should throw if collection size larger then required`() {
         //given
         val numbers = arrayOf(1, 2, 3, 4, 5).map { it.toBigInteger() }.toTypedArray()
 
         //then
-        val error = assertThrows<IllegalArgumentException> { requireNotLongerThan(numbers, 4) }
-        assertEquals("Numbers list with 5 size is too long (limit: 4)", error.message)
+        val error = assertThrows<IllegalArgumentException> { requireNoMoreThan(numbers, 4) }
+        assertEquals("Collection size (5) is too large (limit: 4)", error.message)
     }
 
     @ParameterizedTest
@@ -60,7 +60,7 @@ internal class NumberValidatorTest {
         "1",
     ])
     @NullSource
-    fun `should not throw if numbers size not longer then expected`(
+    fun `should not throw if collection size less or equals then required`(
         input: String?
     ) {
         //given
@@ -70,6 +70,6 @@ internal class NumberValidatorTest {
             ?: emptyArray()
 
         //then
-        assertDoesNotThrow { requireNotLongerThan(numbers, 4) }
+        assertDoesNotThrow { requireNoMoreThan(numbers, 4) }
     }
 }

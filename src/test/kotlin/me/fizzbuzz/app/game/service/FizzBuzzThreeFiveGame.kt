@@ -40,7 +40,7 @@ internal class FizzBuzzThreeFiveGameTest {
         assertThat(fizzBuzzGame.play(*number))
             .hasSameSizeAs(expectedValue)
             .usingRecursiveComparison()
-            .isEqualTo(expectedValue)
+            .isEqualTo(expectedValue.toList())
     }
 
     companion object {

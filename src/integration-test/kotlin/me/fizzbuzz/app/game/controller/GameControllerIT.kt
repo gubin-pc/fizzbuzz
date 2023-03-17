@@ -2,15 +2,15 @@ package me.fizzbuzz.app.game.controller
 
 import me.fizzbuzz.app.FizzbuzzIntegrationTest
 import me.fizzbuzz.app.game.controller.SimpleControllerAdvice.ErrorMessage
+import me.fizzbuzz.app.game.model.view.FizzbuzzResponse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.core.ParameterizedTypeReference
+import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.test.web.reactive.server.WebTestClient
-import java.math.BigInteger
 
 
 internal class GameControllerIT : FizzbuzzIntegrationTest() {
@@ -21,23 +21,25 @@ internal class GameControllerIT : FizzbuzzIntegrationTest() {
     @ParameterizedTest
     @MethodSource("numbers")
     fun `should return expected numbers`(
-        number: Array<BigInteger>,
+        number: Array<String>,
         expectedValue: Array<String>
     ) {
         webTestClient.post()
-            .uri("/give-numbers")
-            .bodyValue(number)
+            .uri("/fizzbuzz")
+            .contentType(APPLICATION_JSON)
+            .bodyValue(createRequest(*number))
             .exchange()
             .expectStatus().isOk
-            .expectBody(object : ParameterizedTypeReference<Array<String>>() {})
-            .isEqualTo(expectedValue)
+            .expectBody(FizzbuzzResponse::class.java)
+            .isEqualTo(FizzbuzzResponse(expectedValue.toList()))
     }
 
     @Test
     fun `should return bad request if negative number exist`() {
         webTestClient.post()
-            .uri("/give-numbers")
-            .bodyValue(arrayOf("1", "2", "-5", "3"))
+            .uri("/fizzbuzz")
+            .contentType(APPLICATION_JSON)
+            .bodyValue(createRequest("1", "2", "-5", "3"))
             .exchange()
             .expectStatus().isBadRequest
             .expectBody(ErrorMessage::class.java)
@@ -54,9 +56,14 @@ internal class GameControllerIT : FizzbuzzIntegrationTest() {
     fun `should return bad request if input is incorrect`(
         input: String
     ) {
+        //given
+        val req = createRequest(*input.split(',').toTypedArray())
+
+        //then
         webTestClient.post()
-            .uri("/give-numbers")
-            .bodyValue(input.split(','))
+            .uri("/fizzbuzz")
+            .contentType(APPLICATION_JSON)
+            .bodyValue(req)
             .exchange()
             .expectStatus().isBadRequest
             .expectBody(ErrorMessage::class.java)
@@ -64,47 +71,42 @@ internal class GameControllerIT : FizzbuzzIntegrationTest() {
     }
 
     @Test
-    fun `should return bad request if numbers size is big`() {
+    fun `should return bad request if collection size is large`() {
         webTestClient.post()
-            .uri("/give-numbers")
-            .bodyValue(arrayOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"))
+            .uri("/fizzbuzz")
+            .contentType(APPLICATION_JSON)
+            .bodyValue(createRequest("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"))
             .exchange()
             .expectStatus().isBadRequest
             .expectBody(ErrorMessage::class.java)
-            .isEqualTo(ErrorMessage("Numbers list with 15 size is too long (limit: 10)"))
+            .isEqualTo(ErrorMessage("Collection size (15) is too large (limit: 10)"))
     }
 
     companion object {
         @JvmStatic
         fun numbers() = listOf(
             arguments(
-                arrayOf(
-                    "1".toBigInteger(),
-                    "3".toBigInteger(),
-                    "5".toBigInteger(),
-                    "15".toBigInteger()
-                ),
+                arrayOf("1", "3", "5", "15"),
                 arrayOf("1", "Fizz", "Buzz", "FizzBuzz"),
             ),
             arguments(
                 arrayOf(
-                    "98464913973759145941857".toBigInteger(),
-                    "295394741921277437825571".toBigInteger(),
-                    "492324569868795729709285".toBigInteger(),
-                    "1476973709606387189127855".toBigInteger()
+                    "98464913973759145941857",
+                    "295394741921277437825571",
+                    "492324569868795729709285",
+                    "1476973709606387189127855"
                 ),
                 arrayOf("98464913973759145941857", "Fizz", "Buzz", "FizzBuzz"),
             ),
             arguments(
-                arrayOf(
-                    null,
-                    "3".toBigInteger(),
-                    null,
-                    "5".toBigInteger(),
-                    null
-                ),
+                arrayOf(" ", "3", "", "5"),
                 arrayOf("Fizz", "Buzz"),
             ),
         )
+    }
+
+    private fun createRequest(vararg numbers: String): String {
+        val input = numbers.joinToString(separator = ",", prefix = "[", postfix = "]") { "\"$it\"" }
+        return """ { "numbers": $input } """.trimIndent()
     }
 }

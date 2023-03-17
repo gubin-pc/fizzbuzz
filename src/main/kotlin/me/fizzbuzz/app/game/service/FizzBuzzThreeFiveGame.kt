@@ -7,14 +7,16 @@ import java.math.BigInteger.ZERO
 @Service
 class FizzBuzzThreeFiveGame : FizzBuzzGame {
 
-    override fun play(vararg numbers: BigInteger) = numbers.map(::getFizzBuzzValue).toTypedArray()
+    override fun play(vararg numbers: BigInteger) =
+        numbers.map(::getFizzBuzzValue)
 
-    private fun getFizzBuzzValue(number: BigInteger) = when {
-        ZERO == number.mod(THREE * FIVE) -> FIZZ + BUZZ
-        ZERO == number.mod(THREE) -> FIZZ
-        ZERO == number.mod(FIVE) -> BUZZ
-        else -> number.toString()
-    }
+    private fun getFizzBuzzValue(number: BigInteger) =
+        when {
+            ZERO == number.mod(THREE * FIVE) -> FIZZ + BUZZ
+            ZERO == number.mod(THREE) -> FIZZ
+            ZERO == number.mod(FIVE) -> BUZZ
+            else -> number.toString()
+        }
 
     companion object {
         private const val FIZZ = "Fizz"
